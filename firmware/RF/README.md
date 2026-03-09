@@ -1,1 +1,1 @@
-All code for RF communication subsystem for CubeSat senior design.
+All documents for RF communication subsystem.
