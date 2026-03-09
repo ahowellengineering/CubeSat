@@ -1,0 +1,37 @@
+# --- CubeMX Defaults ---
+build/
+mx.scratch
+!.settings/
+
+# --- Embedded/GCC Build Artifacts ---
+# Ignore all compiler output and flash images
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.obj
+*.o
+*.d
+*.su
+
+# --- VSCode Specifics ---
+# Ignore the workspace folder, but keep essential shared configs
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# --- Toolchain & IDE Metadata ---
+.mxproject
+STM32CubeIDE/
+*.launch
+core
+MxDb/
+
+# --- OS / Misc ---
+.DS_Store
+Thumbs.db
