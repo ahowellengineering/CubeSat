@@ -1,1 +1,0 @@
-All documents for RF communication subsystem.
