@@ -121,7 +121,7 @@ int main(void)
     // Check if a packet is received
     if (TI_receive_packet(rxBuffer, &rxLength))
     {
-      HAL_GPIO_TogglePin(LED_Pin_GPIO_Port, LED_Pin_Pin)
+      HAL_GPIO_TogglePin(LED_Pin_GPIO_Port, LED_Pin_Pin);
       TI_strobe(CCxxx0_SRX);
 
      
