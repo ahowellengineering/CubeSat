@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "cc1101.h"
+#include "stm32f4xx.h"
+#include "stm32f4xx_hal_gpio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,30 +81,42 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
-
+  
   /* Configure the system clock */
   SystemClock_Config();
-
+  
   /* USER CODE BEGIN SysInit */
-
+  
   /* USER CODE END SysInit */
-
+  
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  TI_init(&hspi1, CS_CC1101_GPIO_Port, CS_CC1101_Pin);
+  Power_up_reset();
+  
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_TogglePin(ledPin_GPIO_Port, ledPin_Pin);
-    HAL_Delay(500);
+    uint8_t chip_partnum = TI_read_status(CCxxx0_PARTNUM);
+    uint8_t chip_version = TI_read_status(CCxxx0_VERSION);
+    
+    if (chip_partnum == 0x00 && chip_version != 0x00 && chip_version != 0xFF) 
+    {
+    // SUCCESS: The SPI connection is solid.
+    // You can blink an onboard LED here to celebrate.
+      HAL_GPIO_TogglePin(ledPin_GPIO_Port, ledPin_Pin);
+      HAL_Delay(1000); // Toggle every second
+    } else {
+    // FAILURE: Check your wiring (MISO/MOSI swap is common)
+    // or check if your SPI Baud Rate is too high.
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -247,12 +261,22 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ledPin_GPIO_Port, ledPin_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(CS_CC1101_GPIO_Port, CS_CC1101_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pin : ledPin_Pin */
   GPIO_InitStruct.Pin = ledPin_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ledPin_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : CS_CC1101_Pin */
+  GPIO_InitStruct.Pin = CS_CC1101_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(CS_CC1101_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 

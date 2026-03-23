@@ -16,6 +16,7 @@ extern "C" {
 #include <stdlib.h>
 #ifndef __STM32L4xx_HAL_H
 #include "stm32f4xx_hal.h"
+#include "dw_stm32_delay.h"
 #endif
 
 /**
