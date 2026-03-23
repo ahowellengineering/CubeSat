@@ -24,6 +24,7 @@
 #include "cc1101.h"
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal_gpio.h"
+#include <stdint.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -98,31 +99,22 @@ int main(void)
   TI_init(&hspi1, CS_CC1101_GPIO_Port, CS_CC1101_Pin);
   Power_up_reset();
   
+  uint8_t count = 0;
   /* USER CODE END 2 */
-
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    uint8_t chip_partnum = TI_read_status(CCxxx0_PARTNUM);
-    uint8_t chip_version = TI_read_status(CCxxx0_VERSION);
-    
-    if (chip_partnum == 0x00 && chip_version != 0x00 && chip_version != 0xFF) 
-    {
-    // SUCCESS: The SPI connection is solid.
-    // You can blink an onboard LED here to celebrate.
-      HAL_GPIO_TogglePin(ledPin_GPIO_Port, ledPin_Pin);
-      HAL_Delay(1000); // Toggle every second
-    } else {
-    // FAILURE: Check your wiring (MISO/MOSI swap is common)
-    // or check if your SPI Baud Rate is too high.
-    }
+    HAL_GPIO_TogglePin(ledPin_GPIO_Port, ledPin_Pin);
+    TI_send_packet(&count, sizeof(count));
+    count++;
+    HAL_Delay(1000); // Toggle every second
+  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-}
 
 /**
   * @brief System Clock Configuration
