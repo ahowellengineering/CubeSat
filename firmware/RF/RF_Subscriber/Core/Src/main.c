@@ -122,13 +122,7 @@ int main(void)
     if (TI_receive_packet(rxBuffer, &rxLength))
     {
       HAL_GPIO_TogglePin(LED_Pin_GPIO_Port, LED_Pin_Pin);
-<<<<<<< HEAD
       TI_strobe(CCxxx0_SRX);
-
-     
-=======
-      TI_strobe(CCxxx0_SRX);     
->>>>>>> b2daf414c2b7b16217c13f6e1965115a0c424bd8
     }
 
     HAL_Delay(100);
