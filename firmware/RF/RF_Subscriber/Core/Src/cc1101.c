@@ -212,30 +212,43 @@ void TI_write_settings()
 	TI_write_reg(CCxxx0_FIFOTHR,0x47); //RX FIFO and TX FIFO Thresholds
 	TI_write_reg(CCxxx0_SYNC1,0xD3);   //Sync Word, High Byte
 	TI_write_reg(CCxxx0_SYNC0,0x91);   //Sync Word, Low Byte
-	TI_write_reg(CCxxx0_PKTLEN,0xFF);  //Packet Length
+	TI_write_reg(CCxxx0_PKTLEN,0x01);  //Packet Length
 	TI_write_reg(CCxxx0_PKTCTRL1,0x04);//Packet Automation Control
-	TI_write_reg(CCxxx0_PKTCTRL0,0x05);//Packet Automation Control
+
+	// enable CRC
+	TI_write_reg(CCxxx0_PKTCTRL0,0x04);//Packet Automation Control
 	TI_write_reg(CCxxx0_ADDR,0x00);    //Device Address
 	TI_write_reg(CCxxx0_CHANNR,0x00);  //Channel Number
-	TI_write_reg(CCxxx0_FSCTRL1,0x08); //Frequency Synthesizer Control
+
+	TI_write_reg(CCxxx0_FSCTRL1,0x06); //Frequency Synthesizer Control
 	TI_write_reg(CCxxx0_FSCTRL0,0x00); //Frequency Synthesizer Control
 
-	//915Mhz Registers
+	// set FREQ registers for 915Mhz
 	TI_write_reg(CCxxx0_FREQ2,0x23);   //Frequency Control Word, High Byte
 	TI_write_reg(CCxxx0_FREQ1,0x31);   //Frequency Control Word, Middle Byte
 	TI_write_reg(CCxxx0_FREQ0,0x3B);   //Frequency Control Word, Low Byte
 
+	// RX Filter BW = 58 kHz
+	TI_write_reg(CCxxx0_MDMCFG4,0xF5); //Modem Configuration
 
-	TI_write_reg(CCxxx0_MDMCFG4,0xCA); //Modem Configuration
+	// Data Rate = 1.2 kBaud
 	TI_write_reg(CCxxx0_MDMCFG3,0x83); //Modem Configuration
-	TI_write_reg(CCxxx0_MDMCFG2,0x93); //Modem Configuration
+	
+	// GFSK modulation
+	TI_write_reg(CCxxx0_MDMCFG2,0x13); //Modem Configuration
 	TI_write_reg(CCxxx0_MDMCFG1,0x22); //Modem Configuration
 	TI_write_reg(CCxxx0_MDMCFG0,0xF8); //Modem Configuration
-	
-	TI_write_reg(CCxxx0_DEVIATN,0x34); //Modem Deviation Setting
+
+	// Frequency Deviation of 5.157 kHz
+	TI_write_reg(CCxxx0_DEVIATN,0x15); //Modem Deviation Setting
+
 	TI_write_reg(CCxxx0_MCSM2,0x07);   //Main Radio Control State Machine Configuration
 	TI_write_reg(CCxxx0_MCSM1,0x30);   //Main Radio Control State Machine Configuration
+
+	// FS_AUTOCAL = 1
 	TI_write_reg(CCxxx0_MCSM0,0x18);   //Main Radio Control State Machine Configuration
+
+	// enable frequency offset compensation
 	TI_write_reg(CCxxx0_FOCCFG,0x16);  //Frequency Offset Compensation Configuration
 	TI_write_reg(CCxxx0_BSCFG,0x6C);   //Bit Synchronization Configuration
 	TI_write_reg(CCxxx0_AGCCTRL2,0x43);//AGC Control
