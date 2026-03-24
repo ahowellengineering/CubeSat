@@ -47,7 +47,8 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
+volatile uint8_t receivedCounter = 0;
+volatile uint8_t rssiValue = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -99,15 +100,16 @@ int main(void)
   TI_init(&hspi1, Chip_Select_GPIO_Port, Chip_Select_Pin);
   Power_up_reset();
 
-  TI_strobe(CCxxx0_SRX);
-
-   // Reset length for each new packet
-    uint8_t rxBuffer[64];
-    uint8_t rxLength = 64;
+  
+  // Reset length for each new packet
+  uint8_t rxBuffer[64];
+  uint8_t rxLength = 64;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  TI_strobe(CCxxx0_SRX);
+  
   while (1)
   {
     /* USER CODE END WHILE */
@@ -117,11 +119,12 @@ int main(void)
     // Check if a packet is received
     if (TI_receive_packet(rxBuffer, &rxLength))
     {
-      uint8_t receivedCounter = rxBuffer[0]; // Assuming the first byte is the counter
+      receivedCounter = rxBuffer[0]; // Assuming the first byte is the counter
+      rssiValue = (int8_t)TI_read_status(CCxxx0_RSSI); // RSSI is the second last byte
       HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+      TI_strobe(CCxxx0_SRX);
     }
 
-    TI_strobe(CCxxx0_SRX);
   }
   /* USER CODE END 3 */
 }

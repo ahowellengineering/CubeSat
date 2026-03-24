@@ -229,7 +229,7 @@ void TI_write_settings()
 	TI_write_reg(CCxxx0_FREQ0,0x3B);   //Frequency Control Word, Low Byte
 
 	// RX Filter BW = 58 kHz
-	TI_write_reg(CCxxx0_MDMCFG4,0xF5); //Modem Configuration
+	TI_write_reg(CCxxx0_MDMCFG4,0x7A); //Modem Configuration
 
 	// Data Rate = 1.2 kBaud
 	TI_write_reg(CCxxx0_MDMCFG3,0x83); //Modem Configuration
