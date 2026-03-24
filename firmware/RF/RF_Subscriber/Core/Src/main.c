@@ -117,6 +117,7 @@ int main(void)
     // Check if a packet is received
     if (TI_receive_packet(rxBuffer, &rxLength))
     {
+      uint8_t receivedCounter = rxBuffer[0]; // Assuming the first byte is the counter
       HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
     }
 
