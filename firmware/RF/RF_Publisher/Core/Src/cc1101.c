@@ -211,11 +211,11 @@ void TI_write_settings()
 	TI_write_reg(CCxxx0_FIFOTHR,0x47); //RX FIFO and TX FIFO Thresholds
 	TI_write_reg(CCxxx0_SYNC1,0xD3);   //Sync Word, High Byte
 	TI_write_reg(CCxxx0_SYNC0,0x91);   //Sync Word, Low Byte
-	TI_write_reg(CCxxx0_PKTLEN,0xFF);  //Packet Length
+	TI_write_reg(CCxxx0_PKTLEN,0x01);  //Packet Length
 	TI_write_reg(CCxxx0_PKTCTRL1,0x04);//Packet Automation Control
 
 	// enable CRC
-	TI_write_reg(CCxxx0_PKTCTRL0,0x05);//Packet Automation Control
+	TI_write_reg(CCxxx0_PKTCTRL0,0x04);//Packet Automation Control
 	TI_write_reg(CCxxx0_ADDR,0x00);    //Device Address
 	TI_write_reg(CCxxx0_CHANNR,0x00);  //Channel Number
 
@@ -229,8 +229,10 @@ void TI_write_settings()
 
 	// RX Filter BW = 58 kHz
 	TI_write_reg(CCxxx0_MDMCFG4,0xF5); //Modem Configuration
+
 	// Data Rate = 1.2 kBaud
 	TI_write_reg(CCxxx0_MDMCFG3,0x83); //Modem Configuration
+	
 	// GFSK modulation
 	TI_write_reg(CCxxx0_MDMCFG2,0x13); //Modem Configuration
 	TI_write_reg(CCxxx0_MDMCFG1,0x22); //Modem Configuration
