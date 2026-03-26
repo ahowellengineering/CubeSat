@@ -94,3 +94,9 @@ uint8_t CC1101_ReceivePacket(CC1101_t *dev, uint8_t *buf) {
 
     return (status[1] & 0x80) ? len : 0; // Return len if CRC is valid
 }
+
+void CC1101_SetMaxPower(CC1101_t *dev) {
+    // 0x3E is the PATABLE address. 
+    // Writing 0xC0 sets the transmit power to +10 dBm (Max).
+    CC1101_WriteReg(dev, 0x3E, 0xC0);
+}

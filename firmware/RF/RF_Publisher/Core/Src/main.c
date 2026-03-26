@@ -104,6 +104,7 @@ CC1101_t cc1101 = {
 CC1101_Init(&cc1101);
 CC1101_Version = CC1101_ReadReg(&cc1101, CC1101_VERSION);
 CC1101_PartNum = CC1101_ReadReg(&cc1101, CC1101_PARTNUM);
+CC1101_SetMaxPower(&cc1101); // Set max power for testing
   /* USER CODE END 2 */
 
   /* Infinite loop */
