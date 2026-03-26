@@ -46,8 +46,6 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
     ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/cc1101.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Core/Src/dw_stm32_delay.c
-    
 )
 
 # Add include paths
