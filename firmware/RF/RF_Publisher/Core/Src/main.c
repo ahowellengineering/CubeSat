@@ -49,6 +49,7 @@ SPI_HandleTypeDef hspi1;
 uint8_t CC1101_Version;
 uint8_t CC1101_PartNum;
 uint8_t tx_counter = 0;
+uint8_t marcstate = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -101,7 +102,13 @@ CC1101_t cc1101 = {
     .gdo0Port = GDO_CC1101_GPIO_Port,
     .gdo0Pin = GDO_CC1101_Pin
 };
-CC1101_Init(&cc1101);
+if (!CC1101_Init(&cc1101)) {
+    // Initialization failed, handle error (e.g., blink LED rapidly)
+    while (1) {
+        HAL_GPIO_TogglePin(ledPin_GPIO_Port, ledPin_Pin);
+        HAL_Delay(50);
+    }
+}
 CC1101_Version = CC1101_ReadReg(&cc1101, CC1101_VERSION);
 CC1101_PartNum = CC1101_ReadReg(&cc1101, CC1101_PARTNUM);
 CC1101_SetMaxPower(&cc1101); // Set max power for testing
@@ -111,7 +118,7 @@ CC1101_SetMaxPower(&cc1101); // Set max power for testing
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+    // marcstate = CC1101_ReadStatus(&cc1101, CC1101_MARCSTATE) & 0x1F;
     CC1101_SendPacket(&cc1101, &tx_counter, sizeof(tx_counter));
     HAL_GPIO_TogglePin(ledPin_GPIO_Port, ledPin_Pin);
     tx_counter++;
@@ -140,13 +147,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 100;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 12;
+  RCC_OscInitStruct.PLL.PLLN = 96;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
