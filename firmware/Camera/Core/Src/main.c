@@ -22,6 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "arducam.h"
+#include "ov2640_regs.h" 
+/* USER CODE END Includes */
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -98,51 +100,65 @@ int main(void)
   MX_SPI1_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  uint32_t last_toggle = 0;
+  uint8_t image_chunk[CHUNK_SIZE];
+  Arducam_Config_t camera_config = {
+      .hi2c = &hi2c1,
+      .hspi = &hspi1,
+      .cs_port = CAM_CS_GPIO_Port,
+      .cs_pin = CAM_CS_Pin
+  };
 
+  // Initialize hardware wrapper
+  Arducam_Init(&camera_config);
+
+  // Initialize OV2640 sensor (Assuming you have the header with the arrays)
+  OV2640_InitJPEG(OV2640_320x240_JPEG); 
+  HAL_Delay(1000);
+
+  // Kick off the very first capture
+  Arducam_FlushFIFO();
+  HAL_Delay(100);
+  Arducam_ClearFIFOFlag();
+  HAL_Delay(100);
+  Arducam_StartCapture();
+
+  while (!Arducam_IsCaptureDone()) {
+    HAL_Delay(10); 
+  }
+
+  uint32_t image_length = Arducam_GetFIFOLength();
+
+  if (image_length > 0 && image_length < 0x3FFFF) 
+  { 
+    uint8_t read_cmd = ARD_FIFO_READ_REG;
+    HAL_GPIO_WritePin(CAM_CS_GPIO_Port, CAM_CS_Pin, GPIO_PIN_RESET); 
+    HAL_SPI_Transmit(&hspi1, &read_cmd, 1, HAL_MAX_DELAY);
+    
+    uint32_t bytes_remaining = image_length;
+    
+    while (bytes_remaining > 0) 
+    {
+      uint16_t bytes_to_read = (bytes_remaining > CHUNK_SIZE) ? CHUNK_SIZE : bytes_remaining;
+      
+      HAL_SPI_Receive(&hspi1, image_chunk, bytes_to_read, HAL_MAX_DELAY);
+      HAL_UART_Transmit(&huart1, image_chunk, bytes_to_read, HAL_MAX_DELAY);
+      
+      bytes_remaining -= bytes_to_read;
+      HAL_Delay(1);
+    }
+    HAL_GPIO_WritePin(CAM_CS_GPIO_Port, CAM_CS_Pin, GPIO_PIN_SET); 
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint32_t last_toggle = 0;
-  uint8_t image_chunk[CHUNK_SIZE];
   while (1)
   {
     uint32_t now = HAL_GetTick();
     if (now - last_toggle >= 1000) {
       HAL_GPIO_TogglePin(onboard_led_GPIO_Port, onboard_led_Pin);
       last_toggle = now;
-    }
-
-    if (Arducam_IsCaptureDone()) {
-    uint32_t image_length = Arducam_GetFIFOLength();
-    
-    if (image_length > 0 && image_length < 0x3FFFF) { // Basic sanity check
-        
-        // 1. Prepare Arducam for a burst read
-        uint8_t read_cmd = ARD_FIFO_READ_REG;
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET); // CS Low
-        HAL_SPI_Transmit(&hspi1, &read_cmd, 1, HAL_MAX_DELAY);
-        
-        uint32_t bytes_remaining = image_length;
-        
-        // 2. Loop and pipe data from SPI directly to UART
-        while (bytes_remaining > 0) {
-            uint16_t bytes_to_read = (bytes_remaining > CHUNK_SIZE) ? CHUNK_SIZE : bytes_remaining;
-            
-            // Read from SPI
-            HAL_SPI_Receive(&hspi1, image_chunk, bytes_to_read, HAL_MAX_DELAY);
-            
-            // Transmit out UART
-            HAL_UART_Transmit(&huart1, image_chunk, bytes_to_read, HAL_MAX_DELAY);
-            
-            bytes_remaining -= bytes_to_read;
-        }
-        
-        HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); // CS High
-        
-        // Clear the flag so the camera can take the next picture
-        Arducam_ClearFIFOFlag(); 
-      } 
     }
     /* USER CODE END WHILE */
 
@@ -254,7 +270,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
   hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -324,7 +340,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(onboard_led_GPIO_Port, onboard_led_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(CAM_CS_GPIO_Port, CAM_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(CAM_CS_GPIO_Port, CAM_CS_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin : onboard_led_Pin */
   GPIO_InitStruct.Pin = onboard_led_Pin;
