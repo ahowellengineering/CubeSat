@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32f4xx_hal_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -41,7 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-IRDA_HandleTypeDef hirda2;
+IRDA_HandleTypeDef hirda1;
 
 /* USER CODE BEGIN PV */
 uint8_t txCounter = 0;
@@ -50,7 +49,7 @@ uint8_t txCounter = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_IRDA_Init(void);
+static void MX_USART1_IRDA_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -89,7 +88,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_IRDA_Init();
+  MX_USART1_IRDA_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -99,7 +98,7 @@ int main(void)
   while (1)
   {
     HAL_GPIO_TogglePin(onboard_led_GPIO_Port, onboard_led_Pin);
-    HAL_IRDA_Transmit(&hirda2, &txCounter, sizeof(txCounter), HAL_MAX_DELAY);
+    HAL_IRDA_Transmit(&hirda1, &txCounter, sizeof(txCounter), HAL_MAX_DELAY);
     txCounter++;
     HAL_Delay(1000);
     /* USER CODE END WHILE */
@@ -155,34 +154,34 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
+  * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART2_IRDA_Init(void)
+static void MX_USART1_IRDA_Init(void)
 {
 
-  /* USER CODE BEGIN USART2_Init 0 */
+  /* USER CODE BEGIN USART1_Init 0 */
 
-  /* USER CODE END USART2_Init 0 */
+  /* USER CODE END USART1_Init 0 */
 
-  /* USER CODE BEGIN USART2_Init 1 */
+  /* USER CODE BEGIN USART1_Init 1 */
 
-  /* USER CODE END USART2_Init 1 */
-  hirda2.Instance = USART2;
-  hirda2.Init.BaudRate = 115200;
-  hirda2.Init.WordLength = IRDA_WORDLENGTH_8B;
-  hirda2.Init.Parity = IRDA_PARITY_NONE;
-  hirda2.Init.Mode = IRDA_MODE_TX_RX;
-  hirda2.Init.Prescaler = 1;
-  hirda2.Init.IrDAMode = IRDA_POWERMODE_NORMAL;
-  if (HAL_IRDA_Init(&hirda2) != HAL_OK)
+  /* USER CODE END USART1_Init 1 */
+  hirda1.Instance = USART1;
+  hirda1.Init.BaudRate = 57600;
+  hirda1.Init.WordLength = IRDA_WORDLENGTH_8B;
+  hirda1.Init.Parity = IRDA_PARITY_NONE;
+  hirda1.Init.Mode = IRDA_MODE_TX_RX;
+  hirda1.Init.Prescaler = 1;
+  hirda1.Init.IrDAMode = IRDA_POWERMODE_NORMAL;
+  if (HAL_IRDA_Init(&hirda1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART2_Init 2 */
+  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END USART2_Init 2 */
+  /* USER CODE END USART1_Init 2 */
 
 }
 

@@ -1,4 +1,5 @@
 #include "cc1101.h"
+#include "cmsis_os2.h"
 #include "stm32f4xx_hal_gpio.h"
 
 // Private Helpers
@@ -75,8 +76,14 @@ void CC1101_SendPacket(CC1101_t *dev, uint8_t *data, uint8_t len) {
     CC1101_Strobe(dev, CC1101_STX);
     
     // Wait for GDO0 to go high (sync sent) then low (packet finished)
-    while(HAL_GPIO_ReadPin(dev->gdo0Port, dev->gdo0Pin) == GPIO_PIN_RESET);
-    while(HAL_GPIO_ReadPin(dev->gdo0Port, dev->gdo0Pin) == GPIO_PIN_SET);
+    while(HAL_GPIO_ReadPin(dev->gdo0Port, dev->gdo0Pin) == GPIO_PIN_RESET)
+    {
+        osThreadYield();
+    }
+    while(HAL_GPIO_ReadPin(dev->gdo0Port, dev->gdo0Pin) == GPIO_PIN_SET)
+    {
+        osThreadYield();
+    }
     
     CC1101_Strobe(dev, CC1101_SRX); // Go back to RX
 }
@@ -95,7 +102,7 @@ uint8_t CC1101_ReceivePacket(CC1101_t *dev, uint8_t *buf) {
     
     // 2. CRITICAL SAFETY CHECK: We only expect a 1-byte payload.
     // If len is anything else, it is a noise spike ("Phantom Packet").
-    if (len != 1) {
+    if (len == 0 || len > 61) {
         CS_High(dev);
         CC1101_Strobe(dev, CC1101_SFRX); // Flush the garbage out of the FIFO
         CC1101_Strobe(dev, CC1101_SRX);  // Go back to listening

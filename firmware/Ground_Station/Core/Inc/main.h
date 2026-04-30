@@ -67,6 +67,8 @@ void Error_Handler(void);
 
 /* USER CODE BEGIN Private defines */
 #define CC1101_RX_FLAG 0x0001
+
+#define OPTICAL_RX_FLAG 0x0001
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

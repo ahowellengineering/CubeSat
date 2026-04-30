@@ -25,11 +25,34 @@
 #include "cc1101.h"
 #include "cmsis_os2.h"
 #include "stm32f4xx_hal_gpio.h"
+#include "stm32f4xx_hal_irda.h"
+#include <stdint.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+typedef struct {
+  uint8_t partNum;
+  uint8_t version;
+  int16_t rssi;
+  uint32_t packets_received;
+  uint8_t rxData[64];
+  uint8_t txData[64];
+} RadioTaskContext_t;
 
+typedef struct {
+  uint8_t rxData;
+} OpticalTaskContext_t;
+
+typedef struct __attribute__((packed)) {
+  float temperature_c;
+  float battery_voltage;
+  uint8_t battery_percentage;
+} TelemetryPacket_t;
+
+// A global instance to hold parsed data
+TelemetryPacket_t parsed_telemetry;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -77,10 +100,8 @@ const osThreadAttr_t logTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
-uint8_t received_count = 0;
-uint8_t PartNum = 0;
-uint8_t Version = 0;
-int16_t rssi_value = 0;
+RadioTaskContext_t radioContext = {0};
+OpticalTaskContext_t opticalContext = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -117,7 +138,7 @@ int main(void)
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+   HAL_Init();
 
   /* USER CODE BEGIN Init */
 
@@ -212,13 +233,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 100;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 12;
+  RCC_OscInitStruct.PLL.PLLN = 96;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -328,7 +348,7 @@ static void MX_USART2_IRDA_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   hirda2.Instance = USART2;
-  hirda2.Init.BaudRate = 115200;
+  hirda2.Init.BaudRate = 57600;
   hirda2.Init.WordLength = IRDA_WORDLENGTH_8B;
   hirda2.Init.Parity = IRDA_PARITY_NONE;
   hirda2.Init.Mode = IRDA_MODE_TX_RX;
@@ -404,6 +424,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     osThreadFlagsSet(radioTaskHandle, CC1101_RX_FLAG);
   }
 }
+
+void HAL_IRDA_RxCpltCallback(IRDA_HandleTypeDef *hirda)
+{
+  if (hirda->Instance == USART2) 
+  {
+    osThreadFlagsSet(opticalTaskHandle, OPTICAL_RX_FLAG);
+  }
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartHeartBeatTask */
@@ -455,8 +483,8 @@ void StartRadioTask(void *argument)
           osDelay(500);
       }
   }
-  PartNum = CC1101_ReadReg(&cc1101, CC1101_PARTNUM);
-  Version = CC1101_ReadReg(&cc1101, CC1101_VERSION);
+  radioContext.partNum = CC1101_ReadReg(&cc1101, CC1101_PARTNUM);
+  radioContext.version = CC1101_ReadReg(&cc1101, CC1101_VERSION);
 
   CC1101_Strobe(&cc1101, CC1101_SRX); // Start in RX mode
   osDelay(100);
@@ -480,9 +508,12 @@ void StartRadioTask(void *argument)
     if (bytes_in_fifo >= 4)
     {
       rx_len = CC1101_ReceivePacket(&cc1101, rx_buffer);
-      received_count = rx_buffer[0];
-      if (rx_len > 0) {
-        rssi_value = CC1101_GetRSSI(rx_buffer, rx_len);
+
+      if (rx_len == sizeof(TelemetryPacket_t))
+      {
+        memcpy(&parsed_telemetry, rx_buffer, rx_len);
+        radioContext.rssi = CC1101_GetRSSI(rx_buffer, rx_len);
+        radioContext.packets_received++;
       }
     }
 
@@ -504,10 +535,12 @@ void StartRadioTask(void *argument)
 void StartOpticalTask(void *argument)
 {
   /* USER CODE BEGIN StartOpticalTask */
+  HAL_IRDA_Receive_IT(&hirda2, &opticalContext.rxData, sizeof(opticalContext.rxData));
   /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+    osThreadFlagsWait(OPTICAL_RX_FLAG, osFlagsWaitAll, osWaitForever);
+    HAL_IRDA_Receive_IT(&hirda2, &opticalContext.rxData, sizeof(opticalContext.rxData));
   }
   /* USER CODE END StartOpticalTask */
 }
