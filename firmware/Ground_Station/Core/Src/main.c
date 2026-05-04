@@ -517,6 +517,7 @@ void StartRadioTask(void *argument)
         uint8_t sync_byte = 0xAA;
         HAL_UART_Transmit(&huart1, &sync_byte, 1, 10);
         HAL_UART_Transmit(&huart1, (uint8_t*)&parsed_telemetry, sizeof(parsed_telemetry), 10);
+        HAL_UART_Transmit(&huart1, &opticalContext.rxData, sizeof(opticalContext.rxData), 10);
       }
     }
 
