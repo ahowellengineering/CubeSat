@@ -37,7 +37,6 @@ uint8_t CC1101_Init(CC1101_t *dev) {
 
     if (CC1101_ReadReg(dev, CC1101_VERSION) == 0) return 0; // Fail
 
-    // 915MHz Optimized Config (38.4kBaud, GFSK)
     CC1101_WriteReg(dev, 0x02, 0x06); // IOCFG0: Assert on Sync, de-assert on end
     
     CC1101_WriteReg(dev, 0x07, 0x04); // PKTCTRL1: Append status
@@ -50,8 +49,8 @@ uint8_t CC1101_Init(CC1101_t *dev) {
     CC1101_WriteReg(dev, 0x0E, 0xA7); // FREQ1
     CC1101_WriteReg(dev, 0x0F, 0xE4); // FREQ0
 
-    CC1101_WriteReg(dev, 0x10, 0xCA); // MDMCFG4
-    CC1101_WriteReg(dev, 0x11, 0x83); // MDMCFG3
+    CC1101_WriteReg(dev, 0x10, 0x2B); // MDMCFG4: Chan BW 541kHz, exponent = 11 (0x0B)
+    CC1101_WriteReg(dev, 0x11, 0x3B); // MDMCFG3: Mantissa = 59 (0x3B) -> Data Rate ~250kbps
     CC1101_WriteReg(dev, 0x12, 0x13); // MDMCFG2: GFSK, 30/32 sync bits
     CC1101_WriteReg(dev, 0x13, 0x22); // MDMCFG1
     CC1101_WriteReg(dev, 0x14, 0xF8); // MDMCFG0
@@ -80,7 +79,7 @@ void CC1101_SendPacket(CC1101_t *dev, uint8_t *data, uint8_t len) {
     {
         osThreadYield();
     }
-    while(HAL_GPIO_ReadPin(dev->gdo0Port, dev->gdo0Pin) == GPIO_PIN_SET)
+    while(HAL_GPIO_ReadPin(dev->gdo0Port, dev->gdo0Pin) == GPIO_PIN_SET) 
     {
         osThreadYield();
     }
@@ -102,7 +101,8 @@ uint8_t CC1101_ReceivePacket(CC1101_t *dev, uint8_t *buf) {
     
     // 2. CRITICAL SAFETY CHECK: We only expect a 1-byte payload.
     // If len is anything else, it is a noise spike ("Phantom Packet").
-    if (len == 0 || len > 61) {
+    if (len == 0 || len > 61) 
+    {
         CS_High(dev);
         CC1101_Strobe(dev, CC1101_SFRX); // Flush the garbage out of the FIFO
         CC1101_Strobe(dev, CC1101_SRX);  // Go back to listening

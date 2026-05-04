@@ -26,6 +26,7 @@
 #include "cmsis_os2.h"
 #include "stm32f4xx_hal_gpio.h"
 #include "stm32f4xx_hal_irda.h"
+#include "stm32f4xx_hal_uart.h"
 #include <stdint.h>
 #include <string.h>
 /* USER CODE END Includes */
@@ -37,8 +38,6 @@ typedef struct {
   uint8_t version;
   int16_t rssi;
   uint32_t packets_received;
-  uint8_t rxData[64];
-  uint8_t txData[64];
 } RadioTaskContext_t;
 
 typedef struct {
@@ -514,6 +513,10 @@ void StartRadioTask(void *argument)
         memcpy(&parsed_telemetry, rx_buffer, rx_len);
         radioContext.rssi = CC1101_GetRSSI(rx_buffer, rx_len);
         radioContext.packets_received++;
+
+        uint8_t sync_byte = 0xAA;
+        HAL_UART_Transmit(&huart1, &sync_byte, 1, 10);
+        HAL_UART_Transmit(&huart1, (uint8_t*)&parsed_telemetry, sizeof(parsed_telemetry), 10);
       }
     }
 

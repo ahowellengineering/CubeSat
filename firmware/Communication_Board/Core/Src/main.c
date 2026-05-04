@@ -697,7 +697,7 @@ void StartRadioTask(void *argument)
       CC1101_Strobe(&cc1101, CC1101_SRX);
     }
 
-    if (osKernelGetTickCount() - last_tx_time >= 10000) 
+    if (osKernelGetTickCount() - last_tx_time >= 1000) // Transmit every 1 second
     {
       if (osMutexAcquire(sensorDataMutexHandle, osWaitForever) == osOK)
       {
@@ -751,7 +751,7 @@ void StartSenseTask(void *argument)
     HAL_ADC_Stop(&hadc1);
 
     float   temp_v = Calculate_Battery_Voltage(adc_value);
-    uint8_t temp_p = Calculate_Battery_Percentage(temp_v);
+    uint8_t temp_p = Calculate_Battery_Percentage(3.6f);
     float   temp_c = MCP9808_ReadTemperature(&hi2c1);
 
     if (osMutexAcquire(sensorDataMutexHandle, osWaitForever) == osOK)
